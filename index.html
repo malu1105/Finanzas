@@ -123,6 +123,25 @@
 <link rel="manifest" href="manifest.json"/>
 <link rel="apple-touch-icon" href="icon-192.png"/>
 <style>
+
+/* ── Identity screen ──────────────────────── */
+.identity-overlay { position: fixed; inset: 0; background: linear-gradient(135deg, #f0ebfa 0%, #e6f7ef 100%); z-index: 999; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 32px; }
+.identity-overlay.hidden { display: none; }
+.identity-logo { font-size: 40px; margin-bottom: 8px; }
+.identity-title { font-size: 26px; font-weight: 800; color: #2d2540; letter-spacing: -0.5px; margin-bottom: 6px; text-align: center; }
+.identity-sub { font-size: 14px; color: #9e93b8; text-align: center; margin-bottom: 40px; }
+.identity-question { font-size: 15px; font-weight: 700; color: #5c5278; margin-bottom: 16px; text-align: center; }
+.identity-options { display: flex; flex-direction: column; gap: 12px; width: 100%; max-width: 280px; }
+.identity-btn { padding: 16px; border-radius: 14px; border: 2px solid transparent; background: #fff; cursor: pointer; text-align: center; transition: all 0.15s; -webkit-tap-highlight-color: transparent; }
+.identity-btn:active { transform: scale(0.97); }
+.identity-btn-emoji { font-size: 28px; display: block; margin-bottom: 4px; }
+.identity-btn-name { font-size: 18px; font-weight: 800; color: #2d2540; display: block; }
+.identity-btn-sub { font-size: 12px; color: #9e93b8; display: block; margin-top: 2px; }
+.identity-btn.p1 { border-color: #b39ddb; }
+.identity-btn.p1:hover { background: #f0ebfa; }
+.identity-btn.p2 { border-color: #80cba8; }
+.identity-btn.p2:hover { background: #e6f7ef; }
+
 /* ── Reset & Base ─────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 :root {
@@ -368,9 +387,29 @@ html, body { height: 100%; background: var(--surface); font-family: -apple-syste
 </head>
 <body>
 <div class="shell">
+  <!-- Identity overlay — shown only first time -->
+  <div class="identity-overlay" id="identity-overlay">
+    <div class="identity-logo">🩷💜</div>
+    <div class="identity-title">Nuestras Finanzas</div>
+    <div class="identity-sub">Primera vez aquí — ¿quién eres tú?</div>
+    <div class="identity-question">Selecciona tu nombre para continuar</div>
+    <div class="identity-options">
+      <button class="identity-btn p1" onclick="setIdentity('p1')" id="id-btn-p1">
+        <span class="identity-btn-emoji">🩷</span>
+        <span class="identity-btn-name" id="id-name-p1">Cargando...</span>
+        <span class="identity-btn-sub">Este es mi celu</span>
+      </button>
+      <button class="identity-btn p2" onclick="setIdentity('p2')" id="id-btn-p2">
+        <span class="identity-btn-emoji">💜</span>
+        <span class="identity-btn-name" id="id-name-p2">Cargando...</span>
+        <span class="identity-btn-sub">Este es mi celu</span>
+      </button>
+    </div>
+  </div>
+
   <!-- Top bar -->
   <div class="topbar">
-    <div class="topbar-title"> Nuestras <span> Finanzas </span></div>
+    <div class="topbar-title">NNuestras<span>Finanzas</span></div>
     <div style="width:8px;height:8px;border-radius:50%;background:#80cba8;flex-shrink:0" id="sync-dot" title="Sincronizado"></div>
     <div class="topbar-month" id="topbar-month">Junio 2026</div>
   </div>
@@ -506,7 +545,7 @@ html, body { height: 100%; background: var(--surface); font-family: -apple-syste
           <div class="form-group">
             <label class="form-label">¿Quién pagó?</label>
             <div class="quien-picker">
-              <button class="quien-btn active" id="qb1" data-quien="yo" onclick="pickQuien(this)">🩷 Tú</button>
+              <button class="quien-btn active" id="qb1" data-quien="yo" onclick="pickQuien(this)">🩷Tú</button>
               <button class="quien-btn" id="qb2" data-quien="ella" onclick="pickQuien(this,'rose')">💜 Ella</button>
               <button class="quien-btn" id="qb3" data-quien="las dos" onclick="pickQuien(this,'both')">🤝 Las dos</button>
             </div>
@@ -620,18 +659,24 @@ html, body { height: 100%; background: var(--surface); font-family: -apple-syste
             <div class="settings-row">
               <div class="settings-icon si-acc">🩷</div>
               <div class="settings-info">
-                <div class="settings-name">Tu nombre</div>
-                <div class="settings-val">Nombre 1</div>
+                <div class="settings-name">Persona 1</div>
+                <div class="settings-val">Nombre de la primera</div>
               </div>
-              <input type="text" class="settings-input" id="cfg-name1" placeholder="Tu nombre" oninput="saveConfig()"/>
+              <input type="text" class="settings-input" id="cfg-name1" placeholder="Nombre 1" oninput="saveConfig()"/>
             </div>
             <div class="settings-row">
               <div class="settings-icon si-rose">💜</div>
               <div class="settings-info">
-                <div class="settings-name">Nombre de ella</div>
-                <div class="settings-val">Nombre 2</div>
+                <div class="settings-name">Persona 2</div>
+                <div class="settings-val">Nombre de la segunda</div>
               </div>
-              <input type="text" class="settings-input" id="cfg-name2" placeholder="Su nombre" oninput="saveConfig()"/>
+              <input type="text" class="settings-input" id="cfg-name2" placeholder="Nombre 2" oninput="saveConfig()"/>
+            </div>
+            <div class="settings-row" style="background:var(--acc-light);border-radius:10px;padding:10px 12px;margin-top:4px">
+              <div style="font-size:13px;color:var(--acc-text)">
+                <strong>Tú eres:</strong> <span id="cfg-identity-label">—</span> &nbsp;
+                <span style="color:var(--ink3);font-size:11px;cursor:pointer" onclick="resetIdentity()">cambiar</span>
+              </div>
             </div>
           </div>
 
@@ -846,14 +891,21 @@ function renderDashboard() {
   const dbIn = document.getElementById('debt-banner-inner');
   if (Math.abs(diff) >= 1) {
     dbEl.style.display = 'block';
-    const debtor = diff > 0 ? (cfg.name2||'Ella') : (cfg.name1||'Tú');
-    const creditor = diff > 0 ? (cfg.name1||'Tú') : (cfg.name2||'Ella');
+    const n1 = cfg.name1 || 'Persona 1';
+    const n2 = cfg.name2 || 'Persona 2';
+    const myId = getMyIdentity();
+    const myName = myId === 'p1' ? n1 : myId === 'p2' ? n2 : n1;
+    const herName = myId === 'p1' ? n2 : myId === 'p2' ? n1 : n2;
+    const debtor = diff > 0 ? n2 : n1;
+    const creditor = diff > 0 ? n1 : n2;
+    const debtorLabel = debtor === myName ? 'Tú' : debtor;
+    const creditorLabel = creditor === myName ? 'Tú' : creditor;
     const amt = fmt(Math.abs(diff));
     dbIn.innerHTML = `<div style="display:flex;align-items:center;gap:10px">
       <div style="font-size:28px">💸</div>
       <div>
         <div style="font-size:13px;font-weight:700;color:var(--ink)">
-          <span style="color:var(--rose)">${debtor}</span> le debe a <span style="color:var(--acc)">${creditor}</span>
+          <span style="color:var(--rose)">${debtorLabel}</span> le debe a <span style="color:var(--acc)">${creditorLabel}</span>
         </div>
         <div style="font-size:20px;font-weight:800;color:var(--acc);margin-top:2px">${amt}</div>
         <div style="font-size:11px;color:var(--ink3);margin-top:2px">por gastos compartidos del mes</div>
@@ -909,8 +961,19 @@ function renderDashboard() {
 }
 
 function expItemHTML(e) {
-  const quien = e.quien === 'yo' ? (state.config.name1||'Tú') : e.quien === 'ella' ? (state.config.name2||'Ella') : 'Las dos';
-  const pillClass = e.quien === 'yo' ? 'pill-acc' : e.quien === 'ella' ? 'pill-rose' : 'pill-green';
+  const myId = getMyIdentity();
+  // From p1 perspective: yo=name1, ella=name2. From p2: yo=name2, ella=name1
+  let quienLabel, pillClass;
+  if (e.quien === 'las dos') {
+    quienLabel = 'Las dos'; pillClass = 'pill-green';
+  } else if (e.quien === 'yo') {
+    quienLabel = myId === 'p2' ? (state.config.name1||'Persona 1') : 'Tú';
+    pillClass = myId === 'p2' ? 'pill-rose' : 'pill-acc';
+  } else {
+    quienLabel = myId === 'p2' ? 'Tú' : (state.config.name2||'Ella');
+    pillClass = myId === 'p2' ? 'pill-acc' : 'pill-rose';
+  }
+  const quien = quienLabel;
   return `<div class="exp-item">
     <div class="exp-cat" style="background:${CAT_BG[e.cat]||'#f5f4f9'}">${CAT_ICONS[e.cat]||'📦'}</div>
     <div class="exp-info">
@@ -1143,17 +1206,13 @@ function saveConfig() {
   if (window.fbSaveConfig) window.fbSaveConfig(state.config);
 }
 function updateConfigLabels() {
-  const n1 = state.config.name1||'Tú';
-  const n2 = state.config.name2||'Ella';
+  const n1 = state.config.name1||'Persona 1';
+  const n2 = state.config.name2||'Persona 2';
   const el1 = document.getElementById('cfg-bal1-label');
   const el2 = document.getElementById('cfg-bal2-label');
   if (el1) el1.textContent = n1;
   if (el2) el2.textContent = n2;
-  // update quien pickers
-  const qb1 = document.getElementById('qb1');
-  const qb2 = document.getElementById('qb2');
-  if (qb1) qb1.textContent = '💜 ' + n1;
-  if (qb2) qb2.textContent = '🩷 ' + n2;
+  updateIdentityUI();
 }
 function confirmClear() {
   if (confirm('¿Segura? Se borrarán todos los gastos, tarjetas y configuración.')) {
@@ -1201,11 +1260,109 @@ document.getElementById('install-btn').addEventListener('click', async () => {
   deferredInstall = null;
 });
 
+
+// ── Identity ──────────────────────────────────
+// Each device stores who they are in localStorage (not Firebase)
+// 'p1' = persona 1 (💜), 'p2' = persona 2 (🩷)
+
+function getMyIdentity() {
+  return localStorage.getItem('nosotras_identity'); // 'p1' or 'p2' or null
+}
+
+function setIdentity(who) {
+  localStorage.setItem('nosotras_identity', who);
+  document.getElementById('identity-overlay').classList.add('hidden');
+  updateIdentityUI();
+  renderDashboard();
+  showToast('✅ Listo, bienvenida ' + getMyName());
+}
+
+function resetIdentity() {
+  if (confirm('¿Cambiar quién eres en este celu?')) {
+    localStorage.removeItem('nosotras_identity');
+    showIdentityScreen();
+  }
+}
+
+function getMyName() {
+  const who = getMyIdentity();
+  if (who === 'p1') return state.config.name1 || 'Persona 1';
+  if (who === 'p2') return state.config.name2 || 'Persona 2';
+  return 'Tú';
+}
+
+function getHerName() {
+  const who = getMyIdentity();
+  if (who === 'p1') return state.config.name2 || 'Persona 2';
+  if (who === 'p2') return state.config.name1 || 'Persona 1';
+  return 'Ella';
+}
+
+function getMyKey() {
+  // Returns 'yo' or 'ella' from the app's perspective based on identity
+  const who = getMyIdentity();
+  if (who === 'p1') return 'yo';   // p1 is always 'yo' for p1's device
+  if (who === 'p2') return 'ella'; // p2 sees herself as 'ella' in data... 
+  // Actually we flip: p2 sees 'ella' expenses as her own 'yo'
+  return 'yo';
+}
+
+function showIdentityScreen() {
+  const overlay = document.getElementById('identity-overlay');
+  overlay.classList.remove('hidden');
+  // Show actual names from config if available
+  const n1 = state.config.name1 || 'Persona 1';
+  const n2 = state.config.name2 || 'Persona 2';
+  document.getElementById('id-name-p1').textContent = n1;
+  document.getElementById('id-name-p2').textContent = n2;
+}
+
+function updateIdentityUI() {
+  const who = getMyIdentity();
+  const myName = getMyName();
+  const herName = getHerName();
+
+  // Update identity label in settings
+  const lbl = document.getElementById('cfg-identity-label');
+  if (lbl) lbl.textContent = myName + (who === 'p1' ? ' (💜)' : ' (🩷)');
+
+  // Update quien picker labels in gastos form
+  const qb1 = document.getElementById('qb1');
+  const qb2 = document.getElementById('qb2');
+  if (qb1) qb1.innerHTML = '💜 Yo (' + myName + ')';
+  if (qb2) qb2.innerHTML = '🩷 Ella (' + herName + ')';
+
+  // Update person card labels in dashboard
+  const dp1name = document.getElementById('dash-p1-name');
+  const dp2name = document.getElementById('dash-p2-name');
+  if (dp1name && dp2name) {
+    if (who === 'p1') {
+      dp1name.textContent = 'Tú (' + myName + ')';
+      dp2name.textContent = herName;
+    } else if (who === 'p2') {
+      dp1name.textContent = state.config.name1 || 'Persona 1';
+      dp2name.textContent = 'Tú (' + myName + ')';
+    }
+  }
+}
+
+function checkIdentityOnLoad() {
+  const who = getMyIdentity();
+  if (!who) {
+    // Wait a moment for Firebase to load names
+    setTimeout(showIdentityScreen, 800);
+  } else {
+    document.getElementById('identity-overlay').classList.add('hidden');
+    updateIdentityUI();
+  }
+}
+
 // ── Init ──────────────────────────────────────
 loadState();
 setDateDefaults();
 renderDashboard();
 updateConfigLabels();
+checkIdentityOnLoad();
 </script>
 
 <script>
