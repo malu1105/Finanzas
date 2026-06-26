@@ -7,7 +7,119 @@
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
 <meta name="apple-mobile-web-app-title" content="Nosotras$"/>
-<title>Nosotras$ — Finanzas</title>
+<title>Nuestras Finanzas</title>
+<!-- Firebase -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getFirestore, doc, setDoc, onSnapshot, collection, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyBrOhQiSWPjrH32tmUxV1jYCcp7C8KUC6Q",
+    authDomain: "finanzas-08m25a.firebaseapp.com",
+    projectId: "finanzas-08m25a",
+    storageBucket: "finanzas-08m25a.firebasestorage.app",
+    messagingSenderId: "53032372295",
+    appId: "1:53032372295:web:c07721927823f5d1a5c962"
+  };
+
+  const fbApp = initializeApp(firebaseConfig);
+  const db = getFirestore(fbApp);
+
+  // Expose db functions to global scope
+  window._db = db;
+  window._fbReady = true;
+  window._fsDoc = doc;
+  window._fsSetDoc = setDoc;
+  window._fsOnSnapshot = onSnapshot;
+  window._fsCollection = collection;
+  window._fsGetDocs = getDocs;
+  window._fsDeleteDoc = deleteDoc;
+
+  // Listen for real-time updates from Firestore
+  function startListeners() {
+    // Config listener
+    onSnapshot(doc(db, 'nosotras', 'config'), snap => {
+      if (snap.exists()) {
+        state.config = snap.data();
+        // Update UI if on dashboard or settings
+        const active = document.querySelector('.page.active');
+        if (active) {
+          const id = active.id;
+          if (id === 'page-dashboard') renderDashboard();
+          if (id === 'page-settings') loadConfig();
+          updateConfigLabels();
+        }
+      }
+    });
+
+    // Expenses listener
+    onSnapshot(collection(db, 'nosotras', 'data', 'expenses'), snap => {
+      state.expenses = [];
+      snap.forEach(d => state.expenses.push(d.data()));
+      localStorage.setItem('nosotras_state', JSON.stringify(state));
+      const active = document.querySelector('.page.active');
+      if (active) {
+        const id = active.id;
+        if (id === 'page-dashboard') renderDashboard();
+        if (id === 'page-gastos') renderExpenses();
+        if (id === 'page-calendario') renderCalendar();
+      }
+    });
+
+    // Cards listener
+    onSnapshot(collection(db, 'nosotras', 'data', 'cards'), snap => {
+      state.cards = [];
+      snap.forEach(d => state.cards.push(d.data()));
+      localStorage.setItem('nosotras_state', JSON.stringify(state));
+      const active = document.querySelector('.page.active');
+      if (active) {
+        const id = active.id;
+        if (id === 'page-dashboard') renderDashboard();
+        if (id === 'page-tarjetas') renderCards();
+      }
+    });
+  }
+
+  // Wait for app JS to be ready then start
+  function waitAndStart() {
+    if (typeof state !== 'undefined' && typeof renderDashboard !== 'undefined') {
+      startListeners();
+    } else {
+      setTimeout(waitAndStart, 100);
+    }
+  }
+  waitAndStart();
+
+  // Expose sync functions globally
+  window.fbSaveConfig = async (cfg) => {
+    try { await setDoc(doc(db, 'nosotras', 'config'), cfg); } catch(e) { console.warn('FB config save:', e); }
+  };
+  window.fbSaveExpense = async (exp) => {
+    try { await setDoc(doc(db, 'nosotras', 'data', 'expenses', String(exp.id)), exp); } catch(e) { console.warn('FB expense save:', e); }
+  };
+  window.fbDeleteExpense = async (id) => {
+    try { await deleteDoc(doc(db, 'nosotras', 'data', 'expenses', String(id))); } catch(e) { console.warn('FB expense delete:', e); }
+  };
+  window.fbSaveCard = async (card) => {
+    try { await setDoc(doc(db, 'nosotras', 'data', 'cards', String(card.id)), card); } catch(e) { console.warn('FB card save:', e); }
+  };
+  window.fbDeleteCard = async (id) => {
+    try { await deleteDoc(doc(db, 'nosotras', 'data', 'cards', String(id))); } catch(e) { console.warn('FB card delete:', e); }
+  };
+  window.fbClearAll = async () => {
+    try {
+      // Delete all expenses
+      const expSnap = await getDocs(collection(db, 'nosotras', 'data', 'expenses'));
+      for (const d of expSnap.docs) await deleteDoc(d.ref);
+      // Delete all cards
+      const cardSnap = await getDocs(collection(db, 'nosotras', 'data', 'cards'));
+      for (const d of cardSnap.docs) await deleteDoc(d.ref);
+      // Reset config
+      await setDoc(doc(db, 'nosotras', 'config'), { name1: 'Tú', name2: 'Ella', bal1: 0, bal2: 0, goal: 0 });
+    } catch(e) { console.warn('FB clear:', e); }
+  };
+</script>
+
 <link rel="manifest" href="manifest.json"/>
 <link rel="apple-touch-icon" href="icon-192.png"/>
 <style>
@@ -259,7 +371,8 @@ html, body { height: 100%; background: var(--surface); font-family: -apple-syste
   <!-- Top bar -->
   <div class="topbar">
     <div class="topbar-title">Nosotras<span>$</span></div>
-    <div class="topbar-month" id="topbar-month">Junio 2025</div>
+    <div style="width:8px;height:8px;border-radius:50%;background:#80cba8;flex-shrink:0" id="sync-dot" title="Sincronizado"></div>
+    <div class="topbar-month" id="topbar-month">Junio 2026</div>
   </div>
 
   <!-- Pages -->
@@ -393,8 +506,8 @@ html, body { height: 100%; background: var(--surface); font-family: -apple-syste
           <div class="form-group">
             <label class="form-label">¿Quién pagó?</label>
             <div class="quien-picker">
-              <button class="quien-btn active" id="qb1" data-quien="yo" onclick="pickQuien(this)">💜 Tú</button>
-              <button class="quien-btn" id="qb2" data-quien="ella" onclick="pickQuien(this,'rose')">🩷 Ella</button>
+              <button class="quien-btn active" id="qb1" data-quien="yo" onclick="pickQuien(this)">🩷 Tú</button>
+              <button class="quien-btn" id="qb2" data-quien="ella" onclick="pickQuien(this,'rose')">💜 Ella</button>
               <button class="quien-btn" id="qb3" data-quien="las dos" onclick="pickQuien(this,'both')">🤝 Las dos</button>
             </div>
           </div>
@@ -505,7 +618,7 @@ html, body { height: 100%; background: var(--surface); font-family: -apple-syste
           <div class="settings-section">
             <div class="settings-title">Personas</div>
             <div class="settings-row">
-              <div class="settings-icon si-acc">💜</div>
+              <div class="settings-icon si-acc">🩷</div>
               <div class="settings-info">
                 <div class="settings-name">Tu nombre</div>
                 <div class="settings-val">Nombre 1</div>
@@ -513,7 +626,7 @@ html, body { height: 100%; background: var(--surface); font-family: -apple-syste
               <input type="text" class="settings-input" id="cfg-name1" placeholder="Tu nombre" oninput="saveConfig()"/>
             </div>
             <div class="settings-row">
-              <div class="settings-icon si-rose">🩷</div>
+              <div class="settings-icon si-rose">💜</div>
               <div class="settings-info">
                 <div class="settings-name">Nombre de ella</div>
                 <div class="settings-val">Nombre 2</div>
@@ -525,7 +638,7 @@ html, body { height: 100%; background: var(--surface); font-family: -apple-syste
           <div class="settings-section">
             <div class="settings-title">Dinero disponible</div>
             <div class="settings-row">
-              <div class="settings-icon si-acc">💜</div>
+              <div class="settings-icon si-acc">🩷</div>
               <div class="settings-info">
                 <div class="settings-name" id="cfg-bal1-label">Tú</div>
                 <div class="settings-val">Saldo inicial del mes</div>
@@ -533,7 +646,7 @@ html, body { height: 100%; background: var(--surface); font-family: -apple-syste
               <input type="number" class="settings-input" id="cfg-bal1" placeholder="0" inputmode="decimal" oninput="saveConfig()"/>
             </div>
             <div class="settings-row">
-              <div class="settings-icon si-rose">🩷</div>
+              <div class="settings-icon si-rose">💜</div>
               <div class="settings-info">
                 <div class="settings-name" id="cfg-bal2-label">Ella</div>
                 <div class="settings-val">Saldo inicial del mes</div>
@@ -631,9 +744,11 @@ function saveState() {
 }
 function loadState() {
   const s = localStorage.getItem('nosotras_state');
-  if (s) state = JSON.parse(s);
-  else {
-    // seed demo data
+  const cleared = localStorage.getItem('nosotras_cleared');
+  if (s) {
+    state = JSON.parse(s);
+  } else if (!cleared) {
+    // Only seed demo data on very first open, never after clearing
     const now = new Date();
     const y = now.getFullYear(), m = now.getMonth();
     state.config = { name1: 'Tú', name2: 'Ella', bal1: 2200, bal2: 2150, goal: 800 };
@@ -653,6 +768,7 @@ function loadState() {
     ];
     saveState();
   }
+  // else: cleared=true and no saved state → stays empty, perfect
 }
 
 // ── Navigation ───────────────────────────────
@@ -835,6 +951,7 @@ function addExpense() {
   };
   state.expenses.unshift(newExp);
   saveState();
+  if (window.fbSaveExpense) window.fbSaveExpense(newExp);
   document.getElementById('g-desc').value = '';
   document.getElementById('g-monto').value = '';
   showToast('✅ Gasto registrado');
@@ -862,8 +979,10 @@ function saveCard() {
   const fecha = document.getElementById('cc-fecha').value;
   const owner = document.getElementById('cc-owner').value;
   if (!nombre || !total || !fecha) { showToast('⚠️ Completa todos los campos'); return; }
-  state.cards.push({ id: Date.now(), nombre, total, minimo: minimo||0, fecha, owner });
+  const newCard = { id: Date.now(), nombre, total, minimo: minimo||0, fecha, owner };
+  state.cards.push(newCard);
   saveState();
+  if (window.fbSaveCard) window.fbSaveCard(newCard);
   document.getElementById('cc-nombre').value = '';
   document.getElementById('cc-total').value = '';
   document.getElementById('cc-minimo').value = '';
@@ -875,6 +994,7 @@ function saveCard() {
 function deleteCard(id) {
   state.cards = state.cards.filter(c => c.id !== id);
   saveState();
+  if (window.fbDeleteCard) window.fbDeleteCard(id);
   renderCards();
   showToast('🗑️ Tarjeta eliminada');
 }
@@ -1020,6 +1140,7 @@ function saveConfig() {
   };
   saveState();
   updateConfigLabels();
+  if (window.fbSaveConfig) window.fbSaveConfig(state.config);
 }
 function updateConfigLabels() {
   const n1 = state.config.name1||'Tú';
@@ -1037,7 +1158,12 @@ function updateConfigLabels() {
 function confirmClear() {
   if (confirm('¿Segura? Se borrarán todos los gastos, tarjetas y configuración.')) {
     localStorage.removeItem('nosotras_state');
-    location.reload();
+    localStorage.setItem('nosotras_cleared', '1');
+    if (window.fbClearAll) {
+      window.fbClearAll().then(() => location.reload());
+    } else {
+      location.reload();
+    }
   }
 }
 
