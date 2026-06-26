@@ -409,7 +409,7 @@ html, body { height: 100%; background: var(--surface); font-family: -apple-syste
 
   <!-- Top bar -->
   <div class="topbar">
-    <div class="topbar-title"> Nuestras <span> Finanzas </span></div>
+    <div class="topbar-title">Nuestras <span> Finanzas </span></div>
     <div style="width:8px;height:8px;border-radius:50%;background:#80cba8;flex-shrink:0" id="sync-dot" title="Sincronizado"></div>
     <div class="topbar-month" id="topbar-month">Junio 2026</div>
   </div>
@@ -470,11 +470,11 @@ html, body { height: 100%; background: var(--surface); font-family: -apple-syste
         </div>
       </div>
 
-      <!-- Savings progress -->
+      <!-- Savings cards -->
       <div class="card" id="savings-card">
         <div class="card-pad">
           <div class="sec-head">
-            <span class="sec-title">Meta de ahorro</span>
+            <span class="sec-title">Meta de ahorro este mes</span>
             <span id="savings-pct" style="font-size:13px;font-weight:800;color:var(--acc)">0%</span>
           </div>
           <div class="progress-wrap">
@@ -486,6 +486,27 @@ html, body { height: 100%; background: var(--surface); font-family: -apple-syste
               <div class="progress-fill" id="savings-bar" style="width:0%; background: var(--acc);"></div>
             </div>
           </div>
+        </div>
+      </div>
+
+      <!-- Accumulated savings -->
+      <div class="card">
+        <div class="card-pad">
+          <div class="sec-head" style="margin-bottom:14px">
+            <span class="sec-title">🏦 Ahorro acumulado</span>
+            <span style="font-size:13px;font-weight:800;color:var(--green)" id="dash-saved-total">S/ 0</span>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <div style="background:var(--acc-light);border-radius:10px;padding:12px;text-align:center">
+              <div style="font-size:11px;font-weight:700;color:var(--acc-text);margin-bottom:4px" id="dash-saved1-name">Persona 1</div>
+              <div style="font-size:20px;font-weight:800;color:var(--acc-text)" id="dash-saved1-amt">S/ 0</div>
+            </div>
+            <div style="background:var(--rose-light);border-radius:10px;padding:12px;text-align:center">
+              <div style="font-size:11px;font-weight:700;color:var(--rose-text);margin-bottom:4px" id="dash-saved2-name">Persona 2</div>
+              <div style="font-size:20px;font-weight:800;color:var(--rose-text)" id="dash-saved2-amt">S/ 0</div>
+            </div>
+          </div>
+          <div style="font-size:11px;color:var(--ink3);text-align:center;margin-top:10px">Actualiza en ⚙️ Config cada vez que ahorres</div>
         </div>
       </div>
 
@@ -545,7 +566,7 @@ html, body { height: 100%; background: var(--surface); font-family: -apple-syste
           <div class="form-group">
             <label class="form-label">¿Quién pagó?</label>
             <div class="quien-picker">
-              <button class="quien-btn active" id="qb1" data-quien="yo" onclick="pickQuien(this)">🩷Tú</button>
+              <button class="quien-btn active" id="qb1" data-quien="yo" onclick="pickQuien(this)">🩷 Tú</button>
               <button class="quien-btn" id="qb2" data-quien="ella" onclick="pickQuien(this,'rose')">💜 Ella</button>
               <button class="quien-btn" id="qb3" data-quien="las dos" onclick="pickQuien(this,'both')">🤝 Las dos</button>
             </div>
@@ -706,13 +727,52 @@ html, body { height: 100%; background: var(--surface); font-family: -apple-syste
               <div class="settings-icon si-green">🎯</div>
               <div class="settings-info">
                 <div class="settings-name">Meta mensual</div>
-                <div class="settings-val">Cuánto quieren ahorrar</div>
+                <div class="settings-val">Cuánto quieren ahorrar este mes</div>
               </div>
               <input type="number" class="settings-input" id="cfg-goal" placeholder="0" inputmode="decimal" oninput="saveConfig()"/>
+            </div>
+            <div class="settings-row">
+              <div class="settings-icon si-green">🏦</div>
+              <div class="settings-info">
+                <div class="settings-name">Ahorro acumulado</div>
+                <div class="settings-val">Total guardado hasta hoy</div>
+              </div>
+              <input type="number" class="settings-input" id="cfg-saved-total" placeholder="0" inputmode="decimal" oninput="saveConfig()"/>
+            </div>
+            <div class="settings-row">
+              <div class="settings-icon si-acc">🩷</div>
+              <div class="settings-info">
+                <div class="settings-name" id="cfg-bal1-label">Persona 1</div>
+                <div class="settings-val">Ahorro propio acumulado</div>
+              </div>
+              <input type="number" class="settings-input" id="cfg-saved1" placeholder="0" inputmode="decimal" oninput="saveConfig()"/>
+            </div>
+            <div class="settings-row">
+              <div class="settings-icon si-rose">💜</div>
+              <div class="settings-info">
+                <div class="settings-name" id="cfg-bal2-label">Persona 2</div>
+                <div class="settings-val">Ahorro propio acumulado</div>
+              </div>
+              <input type="number" class="settings-input" id="cfg-saved2" placeholder="0" inputmode="decimal" oninput="saveConfig()"/>
             </div>
           </div>
 
           <button class="btn-submit" onclick="saveConfig(); showToast('✅ Guardado')">Guardar cambios</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-pad">
+          <div class="sec-title" style="margin-bottom:12px">Notificaciones</div>
+          <div class="settings-row">
+            <div class="settings-icon si-amber">🔔</div>
+            <div class="settings-info">
+              <div class="settings-name">Alertas de tarjetas</div>
+              <div class="settings-val">7, 3, 1 días antes y el día que vence</div>
+            </div>
+            <button onclick="handleNotifBtn()" id="notif-btn" style="font-size:12px;font-weight:700;padding:7px 14px;border-radius:99px;border:none;cursor:pointer;background:var(--acc-light);color:var(--acc-text)">Activar</button>
+          </div>
+          <p id="notif-status" style="font-size:11px;color:var(--ink3);margin-top:8px;padding-left:4px"></p>
         </div>
       </div>
 
@@ -827,7 +887,7 @@ function showPage(id, btn) {
   if (id === 'gastos') renderExpenses();
   if (id === 'tarjetas') renderCards();
   if (id === 'calendario') renderCalendar();
-  if (id === 'settings') loadConfig();
+  if (id === 'settings') { loadConfig(); updateNotifStatus(); }
   document.querySelector('.scroll-area').scrollTop = 0;
 }
 
@@ -927,6 +987,16 @@ function renderDashboard() {
   document.getElementById('savings-goal').textContent = 'meta ' + fmt(goal);
   document.getElementById('savings-bar').style.width = pct + '%';
   document.getElementById('savings-bar').style.background = pct >= 100 ? 'var(--green)' : pct >= 50 ? 'var(--acc)' : 'var(--amber)';
+
+  // Accumulated savings
+  const savedTotal = parseFloat(cfg.savedTotal||0);
+  const saved1 = parseFloat(cfg.saved1||0);
+  const saved2 = parseFloat(cfg.saved2||0);
+  document.getElementById('dash-saved-total').textContent = fmt(savedTotal || saved1 + saved2);
+  document.getElementById('dash-saved1-name').textContent = cfg.name1 || 'Persona 1';
+  document.getElementById('dash-saved2-name').textContent = cfg.name2 || 'Persona 2';
+  document.getElementById('dash-saved1-amt').textContent = fmt(saved1);
+  document.getElementById('dash-saved2-amt').textContent = fmt(saved2);
 
   document.getElementById('topbar-month').textContent = monthName(now.getMonth()) + ' ' + now.getFullYear();
 
@@ -1053,6 +1123,8 @@ function saveCard() {
   document.getElementById('add-card-form').style.display = 'none';
   showToast('✅ Tarjeta guardada');
   renderCards();
+  scheduleCardNotifications();
+  if (state.cards.length === 1) askNotifOnFirstCard();
 }
 function deleteCard(id) {
   state.cards = state.cards.filter(c => c.id !== id);
@@ -1191,15 +1263,21 @@ function loadConfig() {
   document.getElementById('cfg-bal1').value = c.bal1||'';
   document.getElementById('cfg-bal2').value = c.bal2||'';
   document.getElementById('cfg-goal').value = c.goal||'';
+  document.getElementById('cfg-saved-total').value = c.savedTotal||'';
+  document.getElementById('cfg-saved1').value = c.saved1||'';
+  document.getElementById('cfg-saved2').value = c.saved2||'';
   updateConfigLabels();
 }
 function saveConfig() {
   state.config = {
-    name1: document.getElementById('cfg-name1').value || 'Tú',
-    name2: document.getElementById('cfg-name2').value || 'Ella',
+    name1: document.getElementById('cfg-name1').value || 'Persona 1',
+    name2: document.getElementById('cfg-name2').value || 'Persona 2',
     bal1: parseFloat(document.getElementById('cfg-bal1').value)||0,
     bal2: parseFloat(document.getElementById('cfg-bal2').value)||0,
     goal: parseFloat(document.getElementById('cfg-goal').value)||0,
+    savedTotal: parseFloat(document.getElementById('cfg-saved-total').value)||0,
+    saved1: parseFloat(document.getElementById('cfg-saved1').value)||0,
+    saved2: parseFloat(document.getElementById('cfg-saved2').value)||0,
   };
   saveState();
   updateConfigLabels();
@@ -1357,12 +1435,140 @@ function checkIdentityOnLoad() {
   }
 }
 
+
+// ── Notificaciones de tarjetas ────────────────
+function requestNotifPermission() {
+  if (!('Notification' in window)) return;
+  if (Notification.permission === 'default') {
+    Notification.requestPermission();
+  }
+}
+
+function scheduleCardNotifications() {
+  if (!('Notification' in window) || Notification.permission !== 'granted') return;
+  
+  const today = new Date(); today.setHours(0,0,0,0);
+  
+  state.cards.forEach(card => {
+    const due = new Date(card.fecha + 'T12:00:00');
+    const diff = Math.round((due - today) / 86400000);
+    
+    // Notify for cards due in 7, 3, 1 days or today
+    const alertDays = [7, 3, 1, 0];
+    if (!alertDays.includes(diff)) return;
+    
+    // Check if we already notified today for this card+diff combo
+    const key = 'notif_' + card.id + '_' + diff;
+    if (localStorage.getItem(key)) return;
+    
+    let msg = '';
+    if (diff === 0) msg = '🚨 ¡Vence HOY! ' + card.nombre + ' — ' + fmt(card.total);
+    else if (diff === 1) msg = '⚠️ Vence mañana: ' + card.nombre + ' — ' + fmt(card.total);
+    else msg = '🔔 ' + card.nombre + ' vence en ' + diff + ' días — ' + fmt(card.total);
+    
+    // Small delay so they don't all fire at once
+    setTimeout(() => {
+      try {
+        new Notification('Nuestras Finanzas 💜', {
+          body: msg,
+          icon: '/icon-192.png',
+          badge: '/icon-192.png',
+          tag: key,
+        });
+      } catch(e) {}
+    }, 1500);
+    
+    // Mark as notified today
+    localStorage.setItem(key, new Date().toDateString());
+    
+    // Clean up old keys (keep storage tidy)
+    Object.keys(localStorage).forEach(k => {
+      if (k.startsWith('notif_') && localStorage.getItem(k) !== new Date().toDateString()) {
+        // Only clean keys older than today
+        const val = localStorage.getItem(k);
+        if (val && val !== new Date().toDateString()) {
+          localStorage.removeItem(k);
+        }
+      }
+    });
+  });
+}
+
+function askNotifOnFirstCard() {
+  // Called when user saves first card — good moment to ask permission
+  if (!('Notification' in window)) return;
+  if (Notification.permission === 'default') {
+    showToast('💡 Activa notificaciones para recordatorios de tarjetas');
+    setTimeout(() => Notification.requestPermission().then(p => {
+      if (p === 'granted') {
+        showToast('🔔 ¡Notificaciones activadas!');
+        scheduleCardNotifications();
+      }
+    }), 1000);
+  }
+}
+
+
+function handleNotifBtn() {
+  if (!('Notification' in window)) {
+    showToast('⚠️ Tu navegador no soporta notificaciones');
+    return;
+  }
+  if (Notification.permission === 'granted') {
+    scheduleCardNotifications();
+    showToast('🔔 Notificaciones activas');
+  } else if (Notification.permission === 'denied') {
+    showToast('⚠️ Activa los permisos en Configuración del celu');
+  } else {
+    Notification.requestPermission().then(p => {
+      if (p === 'granted') {
+        showToast('🔔 ¡Notificaciones activadas!');
+        scheduleCardNotifications();
+        updateNotifStatus();
+      } else {
+        showToast('⚠️ Permiso denegado');
+      }
+    });
+  }
+}
+
+function updateNotifStatus() {
+  const btn = document.getElementById('notif-btn');
+  const status = document.getElementById('notif-status');
+  if (!btn || !status) return;
+  if (!('Notification' in window)) {
+    btn.textContent = 'No disponible';
+    btn.style.opacity = '0.5';
+    status.textContent = 'Tu navegador no soporta notificaciones.';
+    return;
+  }
+  if (Notification.permission === 'granted') {
+    btn.textContent = '✓ Activas';
+    btn.style.background = 'var(--green-light)';
+    btn.style.color = 'var(--green-text)';
+    status.textContent = 'Recibirás alertas 7, 3 y 1 día antes del vencimiento, y el mismo día.';
+  } else if (Notification.permission === 'denied') {
+    btn.textContent = 'Bloqueadas';
+    btn.style.background = 'var(--red-light)';
+    btn.style.color = 'var(--red-text)';
+    status.textContent = 'Ve a Configuración del celu → Safari → Notificaciones para activarlas.';
+  } else {
+    btn.textContent = 'Activar';
+    status.textContent = 'Toca "Activar" para recibir recordatorios antes de que venzan tus tarjetas.';
+  }
+}
+
 // ── Init ──────────────────────────────────────
 loadState();
 setDateDefaults();
 renderDashboard();
 updateConfigLabels();
 checkIdentityOnLoad();
+// Schedule card notifications on load
+setTimeout(() => {
+  requestNotifPermission();
+  scheduleCardNotifications();
+}, 2000);
 </script>
 
 <script>
